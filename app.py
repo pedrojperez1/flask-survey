@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, flash
+from flask import Flask, render_template, request, redirect, flash, session
 from flask_debugtoolbar import DebugToolbarExtension
 from surveys import Question, Survey, satisfaction_survey
 
@@ -24,6 +24,11 @@ def survey_home():
         survey_instructions=SURVEY.instructions
     )
 
+
+@app.route('/start-survey', methods=["POST"])
+def start_survey():
+    session["responses"] = []
+    return redirect('/questions/0')
 
 @app.route('/questions/<int:question_id>')
 def show_question(question_id):
@@ -54,7 +59,9 @@ def record_answer():
     This endpoint records the answer provided and redirects to next question. Also redirects
     user if the survey is done.
     """
-    RESPONSES.append(request.form['answer'])
+    responses = session["responses"]
+    responses.append(request.form['answer'])
+    session["responses"] = responses
     global CURR_QUESTION
     CURR_QUESTION += 1
     if CURR_QUESTION < len(SURVEY.questions):
